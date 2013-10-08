@@ -1,0 +1,45 @@
+# Calculator language to test the generalized editor
+# from pp 135-136 in the Green Dragon
+
+calculator := *({} <statement> {} ";" {n}) 
+	=> 	("Stack = require ""./stack.js""")
+		("stack = new Stack()")
+		("symbol =[]")
+		<calculator>
+		write filename ".coffee";
+statement := <print> | <assignment> => <statement>;
+
+print := <expression> => "!" <expression> ("console.log(stack.pop())\n");
+
+assignment := <var> {s} "=" {s} <expression> 
+	^ insert <var> 
+	=> <expression> ("symbols[" <var> "]=stack.pop()\n");
+
+var := symbol global;
+
+expression := <add> | <subtract> | <term> => <expression>;
+
+add := <expression> {s} "+" {s} <term> 
+	=> <term> <expression> ("stack.push(stack.pop() + stack.pop())\n");
+subtract := <expression> {s} "-" {s} <term> 
+	=> <term> <expression> ("stack.push(stack.pop() - stack.pop())\n");
+
+term := <multiply> | <divide> | <primary> => <term>;
+multiply := <expression> {s} "*" {s} <primary> 
+	=> <primary> <expression> ("stack.push(stack.pop() * stack.pop())\n");
+divide := <expression> {s} "/" {s} <primary> 
+	=> <primary> <expression> ("stack.push(stack.pop() / stack.pop())\n");
+
+primary := <negate> | <element> => <primary>;
+
+negate := "-" {} <element> => <element> ("stack.push(-stack.pop())\n");
+
+element := <constant> | <ref> | <group> => <element>;
+
+group := "(" {} <expression> {} ")" => <expression>;
+constant := fixed => ("stack.push(" <constant> ");\n");
+ref := <var> ^ <var> isInserted => ("stack.push(symbol[" <var> "])\n)"; 
+
+
+
+	
