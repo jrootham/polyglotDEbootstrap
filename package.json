@@ -1,16 +1,16 @@
 {
   "author": "Jim Rootham",
-  "name": "polyglotDE",
+  "name": "polyglotDEbooststrap",
   "version": "0.1.0",
-  "homepage": "http://jrootham.tjddev.net/polyglotDE/",
+  "homepage": "http://jrootham.tjddev.net/polyglotDEbooststrap/",
   "licenses": {
     "type": "GPL v3",
-    "url": "https://raw.github.com/jrootham/polyglotDE/master/LICENSE"
+    "url": "https://raw.github.com/jrootham/polyglotDEbooststrap/master/LICENSE"
   },
-  "bugs": "https://github.com/jrootham/polyglotDE/issues",
+  "bugs": "https://github.com/jrootham/polyglotDEbooststrap/issues",
   "repository": {
     "type": "git",
-    "url": "git@github.com:jrootham/polyglotDE.git"
+    "url": "git@github.com:jrootham/polyglotDEbooststrap.git"
   },
   "dependencies": {},
   "devDependencies": {

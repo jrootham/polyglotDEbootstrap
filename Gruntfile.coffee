@@ -1,5 +1,35 @@
-#  Gruntfile for base code for Polyglot
+#  Gruntfile for polyglotDE
 
+makeItem = (name, dest, type, excludeList) ->
+  src = []
+  src[src.length] = "**/*" + type + ".coffee"
+  for exclude in excludeList
+    src[src.length] = "!**/*" + exclude + ".coffee"
+
+  result =
+    src: src
+    dest: "src/" + name + "/" + dest + "/"
+    cwd: "src/" + name + "/"
+    expand: true
+    ext: type + ".js"
+
+  return result
+  
+class Group
+  constructor: (name)->
+    @def = new Object()
+    @next name
+  
+  next: (name) =>
+    @def[name + "Bin"] = makeItem name, "bin", "", [".spec", ".scaffold"]
+    @def[name + "Spec"] = makeItem name, "test", ".spec", []
+    @def[name + "Scaffold"] = makeItem name, "test", ".scaffold", []
+    
+    return @
+    
+  done: =>
+    return @def
+  
 module.exports = (grunt)->
   grunt.loadNpmTasks "grunt-coffeelint"
   grunt.loadNpmTasks "grunt-cafe-mocha"
@@ -9,31 +39,28 @@ module.exports = (grunt)->
   grunt.registerTask "default",["clean", "coffeelint", "coffee", "cafemocha"]
   
   grunt.initConfig
-    clean: ["test", "bin"]
+    clean: [
+      "src/server/test/*",
+      "src/server/bin/*",
+      "src/common/test/*",
+      "src/common/bin/*",
+      "src/handbuilt/test/*",
+      "src/handbuilt/bin/*"
+    ]
       
     coffeelint:
-      app:["*.coffee"]
+      app:["src/**/*.coffee"]
 
     coffee:
-      server-bin:
-        files: [
-          src: ["server/*.coffee", "!server/*.spec.coffee", "!Gruntfile.coffee"]
-          dest: "server/bin/"
-          cwd: "."
-          expand: true
-          ext: ".js"
-        ]
-        
-      server-test:
-        files: [
-          src: ["server/*.spec.coffee"]
-          dest: "server/test/"
-          cwd: "."
-          expand: true
-          ext: ".spec.js"
-        ]
+      new Group("server")
+        .next("common")
+        .next("handbuilt")
+        .done()
+      
 
     cafemocha:
-      src: "server/test/*.js"
+      src: "src/**/test/*.js" 
+      options:
+        reporter: "dot"
   
 

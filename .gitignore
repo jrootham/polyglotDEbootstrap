@@ -1,2 +1,7 @@
 *~
-
+common/bin/*
+common/test/*
+server/bin/*
+server/test/*
+node_modules/*
+doc/*
