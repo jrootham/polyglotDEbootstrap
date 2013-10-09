@@ -295,4 +295,3 @@ describe "Testing source object", ->
       should.throw source.singleQuotes(), Error
 ###
 
-
