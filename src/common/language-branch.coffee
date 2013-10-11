@@ -2,7 +2,7 @@
 #   language branching classes
 #
 
-program = require "./program-graph"
+program = require "./program"
 linkable = require "./linkable"
 
 #
@@ -134,13 +134,15 @@ module.exports =
 
     name: "Repeat"
     
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       result = new program.Repeat next.next(), @
       
       save source, parseStack
       
-      while item = @argument.parse next, source, parseStack
+      while item = @argument.parse next, source, parseStack, table
         result.add item
+        item.up = result
+        
         commit source, parseStack
         save source, parseStack
         
@@ -155,14 +157,18 @@ module.exports =
   
     name: "AndJoin"
 
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       save source, parseStack
 
-      leftParse = @left.parse next, source, parseStack
-      rightParse = @right.parse next, source, parseStack
+      leftParse = @left.parse next, source, parseStack, table
+      rightParse = @right.parse next, source, parseStack, table
       
       if leftParse && rightParse
-        result = new program.AndJoin next.next(), @, leftParse, rightParse
+        result = new program.AndJoin next.next(), @, leftParse,rightParse
+        
+        leftParse.up = result
+        rightParse.up = result
+        
         commit source, parseStack
       else
         result = null
@@ -180,19 +186,20 @@ module.exports =
     
     name: "OrJoin"
 
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       save source, parseStack
             
-      descendent = @left.parse next, source, parseStack
+      descendent = @left.parse next, source, parseStack, table
       
       if ! descendent
         restore source, parseStack
         save source, parseStack
-        descendent = @right.parse next, source, parseStack
+        descendent = @right.parse next, source, parseStack, table
           
       if descendent
         commit source, parseStack
         result = new program.OrJoin next.next(), @, descendent
+        descendent.up = result
       else
         restore source, parseStack
         result = null

@@ -6,7 +6,7 @@
 #  Base classes
 #
 
-Program = require "./program"
+Program = require "./program-base"
 
 Monadic = class extends Program
   constructor: (linkid, pointer, @argument) ->
@@ -41,8 +41,6 @@ module.exports =
       
     displayGraph: (visited, indent) ->
       result = @displayNode indent
-      
-      debugger
       
       if ! visited[@linkid]
         visited[@linkid] = true

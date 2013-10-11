@@ -7,6 +7,7 @@ should = require("chai").should()
 
 Source = require "../bin/source"
 language = require "../bin/language"
+program = require "../bin/program"
 linkable = require "../bin/linkable"
 scaffold = require "./test.scaffold"
 
@@ -16,64 +17,110 @@ next = new linkable.Next 1
 dynext = new linkable.Next 1
 otherNext = new linkable.Next 1
 
+table = new program.SymbolTable
+
 parseStack = []
 
 u = new language.Unsigned next.next()
 rw1 = new language.RequiredWhite next.next(), "s"
 a1 = new language.AndJoin next.next(), u, rw1
+u.addUp a1
+rw1.addUp a1
 
 i = new language.Integer next.next()
 rw2 = new language.RequiredWhite next.next(), "s"
 a2 = new language.AndJoin next.next(), i, rw2
+i.addUp a2
+rw2.addUp a2
 
 f = new language.Fixed next.next()
 rw3 = new language.RequiredWhite next.next(), "s"
 a3 = new language.AndJoin next.next(), f, rw3
+f.addUp a3
+rw3.addUp a3
 
 l = new language.Float next.next()
 rw4 = new language.RequiredWhite next.next(), "s"
 a4 = new language.AndJoin next.next(), l, rw4
+l.addUp a4
+rw4.addUp a4
 
 b = new language.FixedBCD next.next()
 rw5 = new language.RequiredWhite next.next(), "s"
 a5 = new language.AndJoin next.next(), b, rw5
+b.addUp a5
+rw5.addUp a5
 
 c = new language.Constant next.next(), "foo"
 p = new language.OptionalWhite next.next(), ""
 a6 = new language.AndJoin next.next(), c, p
+c.addUp a6
+p.addUp a6
 
 y = new language.Symbol next.next()
 rw7 = new language.RequiredWhite next.next(), "s"
 a7 = new language.AndJoin next.next(), y, rw7
+y.addUp a7
+rw7.addUp a7
 
 m = new language.Match next.next(), "[a-z]", ""
 s = new language.StringType next.next()
 a8 = new language.AndJoin next.next(), m, s
+m.addUp a8
+s.addUp a8
+
 t1 = new language.Constant next.next(), "\nfoo"
 a8p1 = new language.AndJoin next.next(), a8, t1
+a8.addUp a8p1
+t1.addUp a8p1
 
 d = new language.DoubleQuotes next.next()
 q = new language.SingleQuotes next.next()
 a9 = new language.AndJoin next.next(), d, q
+d.addUp a9
+q.addUp a9
 
 a11 = new language.AndJoin next.next(), a1, a2
+a1.addUp a11
+a2.addUp a11
+
 a12 = new language.AndJoin next.next(), a3, a4
+a3.addUp a12
+a4.addUp a12
+
 a13 = new language.AndJoin next.next(), a5, a6
+a5.addUp a13
+a6.addUp a13
+
 a14 = new language.AndJoin next.next(), a7, a8p1
+a7.addUp a14
+a8p1.addUp a14
 
 o1 = new language.OrJoin next.next(), a11, a12
+a11.addUp o1
+a12.addUp o1
+
 o2 = new language.OrJoin next.next(), a13, a14
+a13.addUp o2
+a14.addUp o2
 
 o3 = new language.OrJoin next.next(), o1, o2
+o1.addUp o3
+o2.addUp o3
+
 o4 = new language.OrJoin next.next(), o3, a9
+o3.addUp o4
+a9.addUp o4
 
 root = new language.Repeat next.next(), o4
+o4.addUp root
 
 text = "123 -345 67.89 1.23e5 54.33 foo thing_1 "
 text += "abcdef\nfoo\"a string\"'another string'"
 
 source = new Source text
-original = root.parse dynext, source, parseStack
+
+original = root.parse dynext, source, parseStack, table
 
 flat = new linkable.Flat()
 root.flatten flat
@@ -82,7 +129,7 @@ list = flat.list
 other = language.expand list
 
 source = new Source text
-copy = other.parse otherNext, source, parseStack
+copy = other.parse otherNext, source, parseStack, table
 
 test = (name, parsed) ->
   describe "Test graph construction " + name, ->

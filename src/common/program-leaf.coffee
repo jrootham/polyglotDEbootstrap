@@ -2,7 +2,7 @@
 #   Leaf program classes
 #
 
-Program = require "./program"
+Program = require "./program-base"
 
 class Leaf extends Program
   constructor: (linkid, pointer) ->

@@ -6,10 +6,16 @@
 module.exports =
   Linkable: class
     constructor: (@linkid) ->
-
+      @up = []
+      
+    addUp: (upPointer) ->
+      @up.push upPointer
+      
     makeFlatItem: ->
-      return {linkid: @linkid, name: @name}
-
+      result =
+        linkid: @linkid
+        name: @name
+        
     flatten: (flat) ->
       return flat.add @makeFlatItem()
       

@@ -2,10 +2,15 @@
 #   language leaf classes
 #
 
-program = require "./program-graph"
+program = require "./program"
 linkable = require "./linkable"
 
 # ### Non exports
+
+#  standard pattern for symbols
+
+standard = "([A-Z]|[a-z]|_)([A-Z]|[a-z]|[0-9]|_)*"
+ 
 # #### base class for leaves
 
 class Leaf extends linkable.Linkable
@@ -70,7 +75,7 @@ module.exports =
 
     name: "Constant"
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       match = source.next(@value)
       if match
         result = new program.Constant next.next(), @
@@ -108,7 +113,7 @@ module.exports =
     make:  (next, pointer, value) ->
       new program.Match next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, @pattern, @flags, @, @make
 
 # Unsigned
@@ -118,9 +123,9 @@ module.exports =
     name: "Unsigned"
     
     make: (next, pointer, value) ->
-      new program.Unsigned next.next(), pointer, value
+      new program.Unsigned next.next(),pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, "[0-9]*", "", @, @make
 
 # Integer
@@ -132,7 +137,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Integer next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, "\-?[0-9]*", "", @, @make
 
 # Fixed
@@ -144,7 +149,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Fixed next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
 
 # Float
@@ -156,7 +161,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Float next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       pattern = "-?[0-9]*(\\.[0-9]*)?((e|E)-?[0-9]*)?"
       return doMatch next, source, pattern, "", @, @make
 
@@ -170,7 +175,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.FixedBCD next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
 
 
@@ -180,7 +185,7 @@ module.exports =
       
     name: "StringType"
     
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return new program.StringType next.next(), @, source.toEOL()
 
 # SingleQuotes
@@ -189,7 +194,7 @@ module.exports =
       
     name: "SingleQuotes"
     
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       matched = source.singleQuotes()
       if matched
         result = new program.SingleQuotes next.next(), @, matched
@@ -204,7 +209,7 @@ module.exports =
       
     name: "DoubleQuotes"
     
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       matched = source.doubleQuotes()
       if matched
         result = new program.DoubleQuotes next.next(), @, matched
@@ -217,8 +222,8 @@ module.exports =
 # Symbol
   
   Symbol: class extends Leaf
-    constructor: (linkid, @pattern = "([A-Z]|[a-z]|_)([A-Z]|[a-z]|[0-9]|_)*") ->
-      super linkid
+    constructor: (linkid, up, @pattern = standard) ->
+      super linkid, up
       
     name: "Symbol"
     
@@ -233,7 +238,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Symbol next.next(), pointer, value
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, @pattern, "", @, @make
 
 
@@ -243,7 +248,7 @@ module.exports =
       
     name: "OptionalWhite"
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       match = source.match "\\s*"
       return new program.OptionalWhite next.next(), @
 
@@ -256,6 +261,6 @@ module.exports =
     make: (next, pointer, value) ->
       new program.RequiredWhite next.next(), pointer
       
-    parse: (next, source, parseStack) =>
+    parse: (next, source, parseStack, table) =>
       return doMatch next, source, "\\s*", "", @, @make
 

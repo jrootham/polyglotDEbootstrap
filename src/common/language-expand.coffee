@@ -12,28 +12,30 @@ make = (id, expanded, maker) ->
     result = expanded[id]
   return result
   
-connect = (id, link, expanded) ->
-  factory[link[id].name] id, link, expanded
-
+connect = (id, up, link, expanded) ->
+  result = factory[link[id].name] id, link, expanded
+  result.addUp up
+  return result
+  
 factory =
   Repeat: (id, link, expanded) ->
     return make id, expanded, ->
       result = new branch.Repeat id, null
-      result.argument = connect link[id].argument, link, expanded
+      result.argument = connect link[id].argument, result, link, expanded
       return result
 
   AndJoin: (id, link, expanded) ->
     return make id, expanded, ->
       result = new branch.AndJoin id, null, null
-      result.left = connect link[id].left, link, expanded
-      result.right = connect link[id].right, link, expanded
+      result.left = connect link[id].left, result, link, expanded
+      result.right = connect link[id].right, result, link, expanded
       return result
     
   OrJoin: (id, link, expanded) ->
     return make id, expanded, ->
       result = new branch.OrJoin id, null, null
-      result.left = connect link[id].left, link, expanded
-      result.right = connect link[id].right, link, expanded
+      result.left = connect link[id].left, result, link, expanded
+      result.right = connect link[id].right, result, link, expanded
       return result
 
   Constant: (id, link, expanded) ->

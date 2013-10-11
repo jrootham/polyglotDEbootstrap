@@ -5,20 +5,22 @@
 should = require("chai").should()
 
 language = require "../bin/language"
+program = require "../bin/program"
 Source = require "../bin/source"
 linkable = require "../bin/linkable"
 
 next = new linkable.Next 1
 dyNext = new linkable.Next 1
 parseStack = []
+table = new program.SymbolTable
 
 describe "Test parsing classes", ->
   describe "Test Constant", ->
     source = new Source "foobar"
     parser = new language.Constant next.next(), "foo"
     
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -32,8 +34,8 @@ describe "Test parsing classes", ->
   describe "Test Unsigned", ->
     source = new Source "123bar-345"
     parser = new language.Unsigned next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -50,11 +52,11 @@ describe "Test parsing classes", ->
   describe "Test Integer", ->
     source = new Source "123bar-345"
     parser = new language.Integer next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     other = new language.Constant next.next(), "bar"
-    other.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -74,13 +76,13 @@ describe "Test parsing classes", ->
   describe "Test Fixed", ->
     source = new Source "123.34bar-345.bar567"
     parser = new language.Fixed next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     other = new language.Constant next.next(), "bar"
-    other.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    other.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    other.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -103,13 +105,13 @@ describe "Test parsing classes", ->
   describe "Test FixedBCD", ->
     source = new Source "123.34bar-345.bar567"
     parser = new language.FixedBCD next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     other = new language.Constant next.next(), "bar"
-    other.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    other.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    other.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -132,15 +134,15 @@ describe "Test parsing classes", ->
   describe "Test Float", ->
     source = new Source "123.34e2b-345.b567b7.8E-2"
     parser = new language.Float next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     other = new language.Constant next.next(), "b"
-    other.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    other.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
-    other.parse dyNext, source, parseStack
-    fifth = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    other.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
+    other.parse dyNext, source, parseStack, table
+    fifth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -166,8 +168,8 @@ describe "Test parsing classes", ->
   describe "Test Match", ->
     source = new Source "foobar"
     parser = new language.Match next.next(), "f[a-z]o"
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -184,10 +186,10 @@ describe "Test parsing classes", ->
   describe "Test newline terminated string", ->
     source = new Source "foobar\nbarfoo"
     parser = new language.StringType next.next()
-    skip = new language.Constant  next.next(),"\n"
-    first = parser.parse dyNext, source, parseStack
-    skip.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    skip = new language.Constant  next.next(), "\n"
+    first = parser.parse dyNext, source, parseStack, table
+    skip.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -204,8 +206,8 @@ describe "Test parsing classes", ->
   describe "Test single quotes", ->
     source = new Source "'foobar'a"
     parser = new language.SingleQuotes next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -222,8 +224,8 @@ describe "Test parsing classes", ->
   describe "Test double quotes", ->
     source = new Source '"foobar"a'
     parser = new language.DoubleQuotes next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -240,12 +242,12 @@ describe "Test parsing classes", ->
   describe "Test optional white", ->
     source = new Source 'f \v\t\r\na'
     parser = new language.OptionalWhite next.next(), "s"
-    first = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
     skip = new language.Constant next.next(), "f"
-    skipped = skip.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    skipped = skip.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     match = new language.Constant next.next(), "a"
-    matched = match.parse dyNext, source, parseStack
+    matched = match.parse dyNext, source, parseStack, table
         
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -268,13 +270,13 @@ describe "Test parsing classes", ->
   describe "Test required white", ->
     source = new Source ' f\nb'
     parser = new language.RequiredWhite  next.next(), 'n'
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     skip = new language.Constant next.next(), "f"
-    skipped = skip.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
+    skipped = skip.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
     skip2 = new language.Constant next.next(), "b"
-    skipped2 = skip2.parse dyNext, source, parseStack
+    skipped2 = skip2.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -297,13 +299,13 @@ describe "Test parsing classes", ->
   describe "Test symbol", ->
     source = new Source 'foobar_42a _FB22 98'
     parser = new language.Symbol next.next()
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
     skip = new language.RequiredWhite next.next(), 's'
-    skip1 = skip.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    skip2 = skip.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    skip1 = skip.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    skip2 = skip.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
         
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -328,12 +330,15 @@ describe "Test parsing classes", ->
     foo = new language.Constant next.next(), "foo"
     bar = new language.Constant next.next(), "bar"
     parser = new language.AndJoin next.next(), foo, bar
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
-    skip = bar.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    skip = foo.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    foo.addUp parser
+    bar.addUp parser
+    
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
+    skip = bar.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    skip = foo.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -362,11 +367,14 @@ describe "Test parsing classes", ->
     bar = new language.Constant next.next(), "bar"
     a = new language.Constant next.next(), "a"
     parser = new language.OrJoin next.next(), foo, bar
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    skip = a.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    foo.addUp parser
+    bar.addUp parser
+    
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    skip = a.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -397,11 +405,13 @@ describe "Test parsing classes", ->
     foo = new language.Constant next.next(), "foo"
     bar = new language.Constant next.next(), "bar"
     parser = new language.Repeat next.next(), foo
-    first = parser.parse dyNext, source, parseStack
-    second = parser.parse dyNext, source, parseStack
-    skip = bar.parse dyNext, source, parseStack
-    third = parser.parse dyNext, source, parseStack
-    fourth = parser.parse dyNext, source, parseStack
+    foo.addUp parser
+
+    first = parser.parse dyNext, source, parseStack, table
+    second = parser.parse dyNext, source, parseStack, table
+    skip = bar.parse dyNext, source, parseStack, table
+    third = parser.parse dyNext, source, parseStack, table
+    fourth = parser.parse dyNext, source, parseStack, table
     
     it "first should be complete", ->
       first.isComplete().should.be.true

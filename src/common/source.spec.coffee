@@ -282,16 +282,25 @@ describe "Testing source object", ->
     
     it "first should match", ->
       first.should.equal "foo"
-
-###
+      
   describe "quote parse errors", ->
-    describe "mismatched quotes", ->
-      source = new Source "'foo\n"
-      should.throw source.singleQuotes(), Error
+    describe "mismatched single quotes", ->
+      it "should throw Error", ->
+        source = new Source "'foo\n"
+        should.throw source.singleQuotes, Error
 
-  describe "quote parse errors", ->
-    describe "mismatched quotes", ->
-      source = new Source "'foo"
-      should.throw source.singleQuotes(), Error
-###
+      it "should have a line and column message", ->
+        source = new Source "'foo\n"
+        should.throw source.singleQuotes, "At line 1 column 6"
+
+    describe "mismatched double quotes", ->
+      it "should throw Error", ->
+        source = new Source '"foo\n'
+        should.throw source.doubleQuotes, Error
+
+      it "should have a line and column message", ->
+        source = new Source '"foo\n'
+        should.throw source.doubleQuotes, "At line 1 column 6"
+
+      
 
