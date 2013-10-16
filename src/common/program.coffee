@@ -4,6 +4,7 @@
 
 branch = require "./program-branch"
 leaf = require "./program-leaf"
+special = require "./program-special"
 SymbolTable = require "./symbol-table"
 
 module.exports =
@@ -23,6 +24,7 @@ module.exports =
   Match: leaf.Match
   OptionalWhite: leaf.OptionalWhite
   RequiredWhite: leaf.RequiredWhite
+  Production: special.Production
   
   SymbolTable: SymbolTable
 

@@ -3,5 +3,7 @@ src/common/bin/*
 src/common/test/*
 src/server/bin/*
 src/server/test/*
+src/handbuilt/bin/*
+src/handbuilt/test/*
 node_modules/*
 doc/*

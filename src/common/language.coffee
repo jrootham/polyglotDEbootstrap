@@ -6,6 +6,7 @@
 branch = require "./language-branch"
 leaf = require "./language-leaf"
 expand = require "./language-expand"
+special = require "./language-special"
 
 module.exports =
   Repeat: branch.Repeat
@@ -24,6 +25,7 @@ module.exports =
   Match: leaf.Match
   OptionalWhite: leaf.OptionalWhite
   RequiredWhite: leaf.RequiredWhite
+  Production: special.Production
 
   expand: expand.expand
   

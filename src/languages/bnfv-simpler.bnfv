@@ -1,47 +1,35 @@
 #  Bootstrap bnfv 
 
-language := *<line> => 
-	('syntax = require "static"') 
-	('stack = []')
-	<language> 
-	write filename '.coffee'
-	;
-
+language := *<line> 
 line := <definition> | <comment> | <blank> => <line>;
 
-blank := {} <possible_space> "\n";
+blank := {} "\n";
 
-# <string> is a true builtin, not defined in this file
-comment := {} <possible_space> "#" string "\n" 
+# string is a true builtin, not defined in this file
+comment := {} "#" string "\n" 
 
-trailing_comment := {c50} <possible_space> "#" <string> "\n";
+trailing_comment := {c50} "#" string "\n";
 
-definition := (<def> {n} <possible_space>) | <def_comment> => <definition>;
+definition := (<def> {n}) | <def_comment> => <definition>;
 def_comment := <def> <trailing_comment> => <def>;
 def := (<syntax> | <syntax_parse> | <syntax_generate> | <syntax_both>) ";" => <def>;
 
-syntax := {} <possible_space> <name> {s} <possible_space> ":=" {s} <possible_space> <def_expression> ^ (;
+syntax := {} <name> {s}  ":=" {s} <def_expression>;
 
 syntax_parse := <syntax> <parse>;
 syntax_generate := <syntax> <generate>;
 syntax_both := <syntax> <parse> <generate>;
 
-parse := {sw} "^" {s} <possible_space> * <parse_statement>;
-generate := {sw} "=>" {s} <possible_space> * <generate_statement>;
+parse := {sw} "^" {s} *<parse_statement>;
+generate := {sw} "=>" {s}*<generate_statement>;
 
 # syntax definition part
 
-def_expression := <expression> | <left_expression> | <right_expression> | <both_expression>;
-
-left_expression := "e" [s] <required_space> <expression>;		# extendible to the left
-right_expression := <expression> <required_space> [s] "e";		# extendible to the right
-both_expression := "e" [s] <required_space> <expression> <required_space> [s] "e";	# extendible both ways
-
 expression := <or_expression> | <or_term>;
-or_expression := <expression> {s} <possible_space> "|" {s} <possible_space> <or_term>;
+or_expression := <expression> {s} "|" {s} <or_term>;
 or_term := <and_expression> | <primary>
 
-and_expression := <expression> [s] <required_space> <primary>;
+and_expression := <expression> [s] <primary>;
 primary := <repeat_expression> | <base_expression>
 
 repeat_expression := "*" ({} <base_expression>);
@@ -49,27 +37,8 @@ repeat_expression := "*" ({} <base_expression>);
 base_expression := <name_expression> | <constant_expression> | <builtin> | <paren_expression>;
 name_expression := "<" <name> ">";
 name := symbol global;
-paren_expression := "(" {} <possible_space> <expression> {} <possible_space> ")";
-constant_expression := <quoted_string>;	# <quoted_string> is a true builtin not defined in this file
-
-# whitespace definitions
-
-possible_space := <optional_space> | "";
-optional_space := "{" <white> "}";
-required_space := "[" <white> "]";
-
-white := <space> | <tab> | <newline> | <carriage_return> | <indent> | <increase_indent> | <decrease_indent> | <column> | <wrap_preference>;
-
-space := "s";
-tab := "t";
-newline := "n";
-carriage_return := "r";
-indent := "i";
-increase_indent := "+";
-decrease_indent := "-";
-column := "c" <column_spec>;
-column_spec := unsigned;		# builtin
-wrap_preference := "w";
+paren_expression := "(" {} <expression> {}  ")";
+constant_expression := single_quotes | double_quotes;  # single_quotes and double_quotes are builtins not defined in this file
 
 # builtins
 

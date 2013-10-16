@@ -10,6 +10,9 @@ language = require "../bin/language"
 program = require "../bin/program"
 linkable = require "../bin/linkable"
 scaffold = require "./test.scaffold"
+upDown = require "./up-down.scaffold"
+
+upDown.connect linkable, language, program
 
 unique = scaffold.unique
 
@@ -131,12 +134,28 @@ other = language.expand list
 source = new Source text
 copy = other.parse otherNext, source, parseStack, table
 
+describe "language graph", ->
+  it "original ids should be unique (throws if not)", ->
+    root.preorder unique()
+  
+  it "copy ids should be unique (throws if not)", ->
+    other.preorder unique()
+
+  it "original up pointers should be valid (throws if not)", ->
+    root.checkDown
+  
+  it "copy up pointers should be valid (throws if not)", ->
+    other.checkDown
+  
 test = (name, parsed) ->
   describe "Test graph construction " + name, ->
 
     it "The graph should be complete", ->
       parsed.isComplete().should.equal true
       
+    it "up pointers should be valid (throws if not)", ->
+      parsed.checkDown
+    
     it "the ids should be unique (throws if not)", ->
       parsed.preorder unique()
     
@@ -169,7 +188,6 @@ test = (name, parsed) ->
         value.should.equal -345
 
     describe "the second", ->
-      debugger
       it "leftmost should be Fixed", ->
         name = parsed.list[1].argument.argument.argument.left.left.name
         name.should.equal "Fixed"
