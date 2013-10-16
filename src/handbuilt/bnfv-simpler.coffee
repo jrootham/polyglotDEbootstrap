@@ -1,14 +1,14 @@
 #  Bootstrap bnfv
 #
 
-linkable = require "../bin/linkable"
+linkable = require "../../common/bin/linkable"
 language = require "../../common/bin/language"
 
-next = linkable.Next(1)
+next = new linkable.Next(1)
 
 module.exports =
   makeParser: ->
-    return languageList
+    return languageList()
   
 #language := *<line>
 
@@ -27,7 +27,7 @@ line = ->
   o1 = new language.OrJoin next.next(), c, b
   c.addUp o1
   b.addUp o1
-  result = new language.OrJoin d, o1
+  result = new language.OrJoin next.next(), d, o1
   d.addUp result
   o1.addUp result
   return result
@@ -36,13 +36,13 @@ line = ->
 # temporary
 
 comment = ->
-  return new language.Constant "#"
+  return new language.Constant next.next(), "#"
   
 blank = ->
-  return new language.Constant " "
+  return new language.Constant next.next(), " "
   
 definition = ->
-  return new language.Constant ":="
+  return new language.Constant next.next(), ":="
   
 
 #
