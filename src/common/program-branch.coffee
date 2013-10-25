@@ -56,10 +56,26 @@ module.exports =
       
       return result
 
-    preorder: (fn) ->
-      fn @
-      for item in @list
-        item.preorder fn
+    preorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        for item in @list
+          item.preorderFn visited, fn
+
+    inorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        for item in @list
+          item.preorderFn visited, fn
+
+    postorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        for item in @list
+          item.preorderFn visited, fn
+        fn @
 
 #
 #  define a concatenation in the parse tree
@@ -92,11 +108,27 @@ module.exports =
       
       return result
 
-    preorder: (fn) ->
-      @left.preorder fn
-      fn @
-      @right.preorder fn
-    
+    preorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        @left.preorderFn visited, fn
+        @right.preorderFn visited, fn
+
+    inorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        @left.inorderFn visited, fn
+        fn @
+        @right.inorderFn visited, fn
+
+    postorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        @left.postorderFn visited, fn
+        @right.postorderFn visited, fn
+        fn @
+
 #
 #  define a choice point in the parse tree
 #
@@ -124,7 +156,21 @@ module.exports =
     isComplete: ->
       @argument.isComplete()
 
-    preorder: (fn) ->
-      fn @
-      @argument.preorder fn
+    preorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        @argument.preorderFn visited, fn
+
+    inorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        @argument.inorderFn visited, fn
+
+    postorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        @argument.postorderFn visited, fn
+        fn @
 

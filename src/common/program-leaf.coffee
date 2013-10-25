@@ -22,15 +22,6 @@ class Leaf extends Program
   isComplete: ->
     return true
     
-  preorder: (fn) ->
-    fn @
- 
-  inorder: (fn) ->
-    fn @
- 
-  postorder: (fn) ->
-    fn @
-
 class Value extends Leaf
   constructor: (linkid, pointer, @value) ->
     super linkid, pointer

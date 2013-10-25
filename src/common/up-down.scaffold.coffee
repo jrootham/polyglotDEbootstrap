@@ -1,7 +1,7 @@
 #  Test up down linkages
 
 module.exports =
-  connect: (linkable, language, program) ->
+  connectLinkable: (linkable) ->
   
     linkable.Linkable::checkUp = ->
       for item in @up
@@ -16,6 +16,8 @@ module.exports =
     linkable.Linkable::checkDown = ->
       return true
                 
+  connectLanguage: (language) ->
+
     language.Repeat::checkDown = ->
       @checkUp
       @argument.confirmUp @
@@ -63,22 +65,24 @@ module.exports =
       @checkUp
       
       @assign.confirmUp @
-      @graph.confirmUp @
+      @expression.confirmUp @
       if @parseTime then @parseTime.confirmUp @
       if @generate then @generate.confirmUp @
       
       @assign.checkDown
-      @graph.checkDown
+      @expression.checkDown
       if @parseTime then @parseTime.checkDown
       if @generate then @generate.checkDown
 
       return true
 
     language.Production::confirmDown = (item) ->
-      if -1 == [@assign, @graph, @parseTime, @generate].indexOf item
+      if -1 == [@assign, @expression, @parseTime, @generate].indexOf item
         throw new Error "Up pointer with no matching down pointer"
       return true
-            
+  
+  connectProgram: (program) ->
+  
     program.Repeat::checkDown = ->
       @checkUp
       
@@ -121,19 +125,19 @@ module.exports =
       @checkUp
       
       @assign.confirmUp @
-      @graph.confirmUp @
+      @expression.confirmUp @
       if @parseTime then @parseTime.confirmUp @
       if @generate then @generate.confirmUp @
       
       @assign.checkDown
-      @graph.checkDown
+      @expression.checkDown
       if @parseTime then @parseTime.checkDown
       if @generate then @generate.checkDown
 
       return true
 
     program.Production::confirmDown = (item) ->
-      if -1 == [@assign, @graph, @parseTime, @generate].indexOf item
+      if -1 == [@assign, @expression, @parseTime, @generate].indexOf item
         throw new Error "Up pointer with no matching down pointer"
       return true
       

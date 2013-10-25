@@ -3,7 +3,8 @@
 #
 
 program = require "./program"
-linkable = require "./linkable"
+#linkable = require "./linkable"
+languageBase = require "./language-base"
 
 #
 #  Base classes
@@ -11,7 +12,7 @@ linkable = require "./linkable"
  
 #  For single arguments
 
-Monadic = class extends linkable.Linkable
+Monadic = class extends languageBase.LanguageBase
   constructor: (linkid, @argument) ->
     super linkid
 
@@ -24,17 +25,23 @@ Monadic = class extends linkable.Linkable
     if super flat
       @argument.flatten flat
       
-  preorder: (fn) ->
-    fn @
-    @argument.preorder fn
+  preorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      fn @
+      @argument.preorderFn visited, fn
     
-  inorder: (fn) ->
-    fn @
-    @argument.inorder fn
+  inorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      fn @
+      @argument.inorderFn visited, fn
     
-  postorder: (fn) ->
-    @argument.postorder fn
-    fn @
+  postorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      @argument.postorderFn visited, fn
+      fn @
 
   tailDisplay: (visited, indent)->
     if @argument
@@ -46,7 +53,7 @@ Monadic = class extends linkable.Linkable
        
 #  For 2 arguments
     
-Dyadic = class extends linkable.Linkable
+Dyadic = class extends languageBase.LanguageBase
   constructor: (linkid, @left, @right) ->
     super linkid
 
@@ -61,20 +68,26 @@ Dyadic = class extends linkable.Linkable
       @left.flatten flat
       @right.flatten flat
       
-  preorder: (fn) ->
-    fn @
-    @left.preorder fn
-    @right.preorder fn
+  preorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      fn @
+      @left.preorderFn visited, fn
+      @right.preorderFn visited, fn
 
-  inorder: (fn) ->
-    @left.inorder fn
-    fn @
-    @right.inorder fn
+  inorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      @left.inorderFn visited, fn
+      fn @
+      @right.inorderFn visited, fn
 
-  postorder: (fn) ->
-    @left.postorder fn
-    @right.postorder fn
-    fn @
+  postorderFn: (visited, fn) ->
+    if -1 == visited.indexOf @
+      visited.push @
+      @left.postorderFn visited, fn
+      @right.postorderFn visited, fn
+      fn @
 
   tailDisplay: (visited, indent)->
     if @left
@@ -134,20 +147,24 @@ module.exports =
 
     name: "Repeat"
     
-    parse: (next, source, parseStack, table) =>
-      result = new program.Repeat next.next(), @
-      
-      save source, parseStack
-      
-      while item = @argument.parse next, source, parseStack, table
-        result.add item
-        item.up = result
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = new program.Repeat next.next(), @
         
-        commit source, parseStack
         save source, parseStack
         
-      restore source, parseStack
-      
+        while item = @argument.parseFn next, source, parseStack, table
+          result.add item
+          item.up = result
+          
+          commit source, parseStack
+          save source, parseStack
+          
+        restore source, parseStack
+      else
+        result = null
+          
       return result
 
 #
@@ -157,23 +174,27 @@ module.exports =
   
     name: "AndJoin"
 
-    parse: (next, source, parseStack, table) =>
-      save source, parseStack
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        save source, parseStack
 
-      leftParse = @left.parse next, source, parseStack, table
-      rightParse = @right.parse next, source, parseStack, table
-      
-      if leftParse && rightParse
-        result = new program.AndJoin next.next(), @, leftParse,rightParse
+        leftParse = @left.parseFn next, source, parseStack, table
+        rightParse = @right.parseFn next, source, parseStack, table
         
-        leftParse.up = result
-        rightParse.up = result
-        
-        commit source, parseStack
+        if leftParse && rightParse
+          result = new program.AndJoin next.next(), @, leftParse,rightParse
+          
+          leftParse.up = result
+          rightParse.up = result
+          
+          commit source, parseStack
+        else
+          result = null
+          restore source, parseStack
       else
         result = null
-        restore source, parseStack
-        
+                
       return result
 
 #
@@ -186,23 +207,29 @@ module.exports =
     
     name: "OrJoin"
 
-    parse: (next, source, parseStack, table) =>
-      save source, parseStack
-            
-      descendent = @left.parse next, source, parseStack, table
-      
-      if ! descendent
-        restore source, parseStack
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
         save source, parseStack
-        descendent = @right.parse next, source, parseStack, table
-          
-      if descendent
-        commit source, parseStack
-        result = new program.OrJoin next.next(), @, descendent
-        descendent.up = result
-      else
-        restore source, parseStack
-        result = null
+              
+        descendent = @left.parseFn next, source, parseStack, table
         
+        if ! descendent
+          restore source, parseStack
+          save source, parseStack
+          @right.preorder -> @reached = -1
+
+          descendent = @right.parseFn next, source, parseStack, table
+            
+        if descendent
+          commit source, parseStack
+          result = new program.OrJoin next.next(), @, descendent
+          descendent.up = result
+        else
+          restore source, parseStack
+          result = null
+      else
+        result = null
+                
       return result
 

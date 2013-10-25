@@ -1,6 +1,7 @@
 # special cases for language
 
-linkable = require "./linkable"
+#linkable = require "./linkable"
+languageBase = require "./language-base"
 program = require "./program"
 
 #  the assignment side of the graph is connected with AndJoins and has 1
@@ -21,16 +22,16 @@ findSymbol = (graph)->
   return result
   
 module.exports =
-  Production: class extends linkable.Linkable
-    constructor: (linkid, @assign, @graph, @parseTime, @generate) ->
+  Production: class extends languageBase.LanguageBase
+    constructor: (linkid, @assign, @expression, @parseTime, @generate) ->
       super linkid
 
     name: "Production"
-    
+
     makeFlatItem: ->
       result = super
       result.assign = @assign.linkid
-      result.graph = @graph.linkid
+      result.expression = @expression.linkid
       result.parseTime = @parseTime.linkid
       result.generate = @generate.linkid
       return result
@@ -38,30 +39,36 @@ module.exports =
     flatten: (flat) ->
       if super flat
         @assign.flatten flat
-        @graph.flatten flat
+        @expression.flatten flat
         @parseTime.flatten flat
         @generate.flatten flat
         
-    preorder: (fn) ->
-      fn @
-      @assign.preorder fn
-      @graph.preorder fn
-      @parseTime.preorder fn
-      @generate.preorder fn
+    preorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+        @assign.preorderFn visited, fn
+        @expression.preorderFn visited, fn
+        @parseTime.preorderFn visited, fn
+        @generate.preorderFn visited, fn
 
-    inorder: (fn) ->
-      @assign.inorder fn
-      fn @
-      @graph.inorder fn
-      @parseTime.inorder fn
-      @generate.inorder fn
+    inorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        @assign.inorderFn visited, fn
+        fn @
+        @expression.inorderFn visited, fn
+        @parseTime.inorderFn visited, fn
+        @generate.inorderFn visited, fn
 
-    postorder: (fn) ->
-      @assign.postorder fn
-      @graph.postorder fn
-      @parseTime.postorder fn
-      @generate.postorder fn
-      fn @
+    postorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        @assign.postorderFn visited, fn
+        @expression.postorderFn visited, fn
+        @parseTime.postorderFn visited, fn
+        @generate.postorderFn visited, fn
+        fn @
 
     tailDisplay: (visited, indent)->
       if @assign
@@ -69,10 +76,10 @@ module.exports =
       else
         result = indent + "  " + "assign is null\n"
       
-      if @graph
-        result += @graph.displayGraph visited, indent + "  "
+      if @expression
+        result += @expression.displayGraph visited, indent + "  "
       else
-        result += indent + "  " + "graph is null\n"
+        result += indent + "  " + "expression is null\n"
       
       if @parseTime
         result += @parseTime.displayGraph visited, indent + "  "
@@ -86,32 +93,34 @@ module.exports =
       
       return "\n" + result
 
-    parse: (next, source, parseStack, table) =>
-      assignProgram = @assign.parse next, source, parseStack, table
-      
-      result = null
-      
-      if assignProgram
-        if source.next ":="
-          graphProgram = @graph.parse next, source, parseStack, table
-          
-          if graphProgram
-            parseTimeProgram =  @parseTime.parse next, source, parseStack, table
-            generateProgram = @generate.parse next, source, parseStack, table
-            source.next ";"
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        assignProgram = @assign.parse next, source, parseStack, table
+        
+        result = null
+        
+        if assignProgram
+          if source.next ":="
+            expressionProgram = @expression.parseFn next, source, parseStack
+            , table
             
-            result = new program.Production next.next(), assignProgram
-            , graphProgram, parseTimeProgram, generateProgram
-            
-            assignProgram.addUp result
-            graphProgram.addUp result
-            if parseTimeProgram
-              parseTimeProgram.addUp result
-            if generateProgram
-              generateProgram.addUp result
-            
-            name = findSymbol assignProgram
-            table.set name, result
-            
+            if expressionProgram
+              postParseProgram =  @parseTime.parseFn next, source, parseStack
+              , table
+              generateProgram = @generate.parseFn next, source, parseStack
+              , table
+              source.next ";"
+              
+              result = new program.Production next.next(), assignProgram
+              , expressionProgram, postParseProgram, generateProgram
+              
+              assignProgram.addUp result
+              expressionProgram.addUp result
+              if postParseProgram then postParseProgram.addUp result
+              if generateProgram then generateProgram.addUp result
+      else
+        result = null
+                    
       return result
       

@@ -3,13 +3,17 @@
 
 linkable = require "../../common/bin/linkable"
 language = require "../../common/bin/language"
+prod = require "./bnfv-production"
 
 next = new linkable.Next(1)
 
 module.exports =
   makeParser: ->
     return languageList()
+
   
+production = prod.production(next)
+
 #language := *<line>
 
 languageList = ->
@@ -21,6 +25,7 @@ languageList = ->
 #line := <definition> | <comment> | <blank>;
 
 line = ->
+
   c = comment()
   b = blank()
   d = definition()
@@ -31,123 +36,79 @@ line = ->
   d.addUp result
   o1.addUp result
   return result
-  
-  
-# temporary
-
-comment = ->
-  return new language.Constant next.next(), "#"
-  
-blank = ->
-  return new language.Constant next.next(), " "
-  
-definition = ->
-  return new language.Constant next.next(), ":="
-  
-
+    
 #
 #blank := {} "\n";
 #
+
+blank = ->
+  nl = new language.Constant next.next(), "\n"
+  w = new language.OptionalWhite next.next(), "", "[ \\t\\v\\f]*"
+  result = new language.AndJoin next.next(), w, nl
+  nl.addUp result
+  w.addUp result
+  return result
+  
 ## string is a true builtin, not defined in this file
 #comment := {} "#" string "\n"
+
+comment = ->
+  w = new language.OptionalWhite next.next(), "", "[ \\t\\v\\f]*"
+  h = new language.Constant next.next(), "#"
+  st = new language.StringType next.next()
+  nl = new language.Constant next.next(), "\n"
+  a1 = new language.AndJoin next.next(), w, h
+  w.addUp a1
+  h.addUp a1
+  a2 = new language.AndJoin next.next(), st, nl
+  st.addUp a2
+  nl.addUp a2
+  result = new language.AndJoin next.next(), a1, a2
+  a1.addUp result
+  a2.addUp result
+  return result
+
+#definition := <def_comment> | (<production> {n}) => <production>;
+
+definition = ->
+  df = def_comment()
+  w = new language.OptionalWhite next.next(), "n"
+  a = new language.AndJoin next.next(), production, w
+  production.addUp a
+  w.addUp a
+  result = new language.OrJoin next.next(), a, df
+  a.addUp result
+  df.addUp result
+  return result
+   
+  
+#def_comment := <production> <trailing_comment> => <production>;
+
+def_comment = ->
+  t = trailing_comment()
+  result = new language.AndJoin next.next(), production, t
+  production.addUp result
+  t.addUp result
+  return result
+  
 #
 #trailing_comment := {c50} "#" string "\n";
 #
-#definition := (<def> {n}) | <def_comment> => <definition>;
-#def_comment := <def> <trailing_comment> => <def>;
-#def := (<syntax> | <syntax_parse> | <syntax_generate> | <syntax_both>) ";";
-#
-#syntax := {} <name> {s}  ":=" {s} <def_expression>;
-#
-#syntax_parse := <syntax> <parse>;
-#syntax_generate := <syntax> <generate>;
-#syntax_both := <syntax> <parse> <generate>;
-#
-#parse := {sw} "^" {s} *<parse_statement>;
-#generate := {sw} "=>" {s}*<generate_statement>;
-#
-## syntax definition part
-#
-#expression := <or_expression> | <or_term>;
-#or_expression := <expression> {s} "|" {s} <or_term>;
-#or_term := <and_expression> | <primary>
-#
-#and_expression := <expression> [s] <primary>;
-#primary := <repeat_expression> | <base_expression>
-#
-#repeat_expression := "*" ({} <base_expression>);
-#
-#base_expression := <name_expression> | <constant_expression> | <builtin>
-#  | <paren_expression>;
-#name_expression := "<" <name> ">";
-#name := symbol global;
-#paren_expression := "(" {} <expression> {}  ")";
-# single_quotes and double_quotes are builtins not defined in this file
-#constant_expression := single_quotes | double_quotes;
-#
-## builtins
-#
-#builtin := <unsigned> | <integer> | <fixed> | <float> | <fixed_bcd> |<symbol>;
-#
-#unsigned := "unsigned" <bits>;
-#integer := "integer" <bits>;
-#fixed := "fixed" <float_bits>;
-#float := "float" <float_bits>;
-#fixed_bcd := "fixed_bcd" <fixed_digits>;
-#symbol := "symbol" <scope> <namespace> <symbol_regex>;
-#match := "match" <regex>
-#
-#bits := <bit_count> | "";
-#bit_count := <number>;
-#
-#number := match "/[0-9]*/";
-#
-#float_bits := <bit_count> <exponent_bit_count> | "";
-#exponent_bit_count := <number>;
-#
-#fixed_digits := <total_digits> <fraction_digits> | "";
-#total_digits := <number>;
-#fraction_digits := <number> | "";
-#
-#regex := "/" <string> "/";		#  Special case builtin
-#
-#scope := "global";
-#
-#namespace := "";
-#
-#symbol_regex := <regex> | "";
-#
-## Parse time actions
-#
-#parse_statement := {} "(" {} <parse_action> {} ")" {w};
-#
-#parse_action := <insert> | <is_inserted> | <is_type> | <type_equals>
-# | <make_type> | <set> | <is_set>;
-#
-#insert := "insert" [s] <item>;
-#is_inserted := <item> [s] "is_inserted";
-#is_type := <item> [s] "is_type" [s] <type>;
-#type_equals := <left_item> [s] "type_equals" [s] <right_item>;
-#make_type := "make_type" [s] <type>;
-#set := <item> [s] "set" [s] <value>;
-#is_set := "is_set" [s] <item>;
-#
-#item := <local_name> | """" <name> """"";
-## local_name must be a name used in the current production
-#local_name := local_name;
-#
-#<type> := <name>;
-#<left_item> := <item>;
-#<right_item> := <item>;
-#<value> := <string>;   #  This is not complete
-#
-##  Code generation
-#
-#generate_statement := "(" {} <generation> {} ")" | "<" <descend> ">";
-#
-#descend := <local_name>;
-#generation := <generate_action> *([s] <generate_action>);
-#generate_action := <generate_constant> | <generate_dynamic>;
-#generate_constant := <quoted_string>;
-#generate_dynamic := <local_name>;
-#
+
+trailing_comment = ->
+  w = new language.OptionalWhite next.next(), "c50"
+  h = new language.Constant next.next(), "#"
+  st = new language.StringType next.next()
+  n = new language.Constant next.next(), "\n"
+  a1 = new language.AndJoin next.next(), w, h
+  w.addUp a1
+  h.addUp a1
+  a2 = new language.AndJoin next.next(), st, n
+  st.addUp a2
+  n.addUp a2
+  result = new language.AndJoin next.next(), a1, a2
+  a1.addUp result
+  a2.addUp result
+  return result
+   
+

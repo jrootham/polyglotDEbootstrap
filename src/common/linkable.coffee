@@ -10,7 +10,31 @@ module.exports =
       
     addUp: (upPointer) ->
       @up.push upPointer
-      
+
+    preorder: (fn) ->
+      @preorderFn [], fn
+                
+    preorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+   
+    inorder: (fn) ->
+      @inorderFn [], fn
+   
+    inorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+
+    postorder: (fn) ->
+      @postorderFn [], fn
+
+    postorderFn: (visited, fn) ->
+      if -1 == visited.indexOf @
+        visited.push @
+        fn @
+
     makeFlatItem: ->
       result =
         linkid: @linkid

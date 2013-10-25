@@ -3,7 +3,8 @@
 #
 
 program = require "./program"
-linkable = require "./linkable"
+#linkable = require "./linkable"
+languageBase = require "./language-base"
 
 # ### Non exports
 
@@ -13,36 +14,25 @@ standard = "([A-Z]|[a-z]|_)([A-Z]|[a-z]|[0-9]|_)*"
  
 # #### base class for leaves
 
-class Leaf extends linkable.Linkable
-
+class Leaf extends languageBase.LanguageBase
+  constructor: (linkid) ->
+    super linkid
+    
 # Display following id and name
 
   tailDisplay: (visited, indent)->
     "\n"
 
-#  apply function in preorder
-  preorder: (fn) ->
-    fn @
-
-#  apply function in inorder
-  inorder: (fn) ->
-    fn @
-
-#  apply function in postorder
-  postorder: (fn) ->
-    fn @
-
-
 # #### a base class for whitespace
 
 class White extends Leaf
-  constructor: (linkid, @whitespace) ->
+  constructor: (linkid, @whitespace, @pattern = "\\s*") ->
     super linkid
     
 # Display whitespace to insert
 
   tailDisplay: (visited, indent)->
-    ":" + @whitespace + ":\n"
+    ":" + @pattern + ":" + @whitespace + ":\n"
 
 # create a flat Whitespace item
     
@@ -75,10 +65,14 @@ module.exports =
 
     name: "Constant"
       
-    parse: (next, source, parseStack, table) =>
-      match = source.next(@value)
-      if match
-        result = new program.Constant next.next(), @
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        match = source.next(@value)
+        if match
+          result = new program.Constant next.next(), @
+        else
+          result = null
       else
         result = null
       return result
@@ -113,9 +107,15 @@ module.exports =
     make:  (next, pointer, value) ->
       new program.Match next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, @pattern, @flags, @, @make
-
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, @pattern, @flags, @, @make
+      else
+        result = null
+        
+      return result
+      
 # Unsigned
   
   Unsigned: class extends Leaf
@@ -125,8 +125,14 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Unsigned next.next(),pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, "[0-9]*", "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, "[0-9]*", "", @, @make
+      else
+        result = null
+        
+      return result
 
 # Integer
   
@@ -137,8 +143,14 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Integer next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, "\-?[0-9]*", "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, "\-?[0-9]*", "", @, @make
+      else
+        result = null
+        
+      return result
 
 # Fixed
   
@@ -149,9 +161,14 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Fixed next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
-
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
+      else
+        result = null
+        
+      return result
 # Float
   
   Float: class extends Leaf
@@ -161,9 +178,15 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Float next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      pattern = "-?[0-9]*(\\.[0-9]*)?((e|E)-?[0-9]*)?"
-      return doMatch next, source, pattern, "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        pattern = "-?[0-9]*(\\.[0-9]*)?((e|E)-?[0-9]*)?"
+        result = doMatch next, source, pattern, "", @, @make
+      else
+        result = null
+        
+      return result
 
 
 # FixedBCD
@@ -175,8 +198,14 @@ module.exports =
     make: (next, pointer, value) ->
       new program.FixedBCD next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
+      else
+        result = null
+        
+      return result
 
 
 # StringType
@@ -185,8 +214,14 @@ module.exports =
       
     name: "StringType"
     
-    parse: (next, source, parseStack, table) =>
-      return new program.StringType next.next(), @, source.toEOL()
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = new program.StringType next.next(), @, source.toEOL()
+      else
+        result = null
+        
+      return result
 
 # SingleQuotes
   
@@ -194,13 +229,17 @@ module.exports =
       
     name: "SingleQuotes"
     
-    parse: (next, source, parseStack, table) =>
-      matched = source.singleQuotes()
-      if matched
-        result = new program.SingleQuotes next.next(), @, matched
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        matched = source.singleQuotes()
+        if matched
+          result = new program.SingleQuotes next.next(), @, matched
+        else
+          result = null
       else
         result = null
-      
+        
       return result
       
 # DoubleQuotes
@@ -209,13 +248,17 @@ module.exports =
       
     name: "DoubleQuotes"
     
-    parse: (next, source, parseStack, table) =>
-      matched = source.doubleQuotes()
-      if matched
-        result = new program.DoubleQuotes next.next(), @, matched
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        matched = source.doubleQuotes()
+        if matched
+          result = new program.DoubleQuotes next.next(), @, matched
+        else
+          result = null
       else
         result = null
-      
+        
       return result
 
 
@@ -238,8 +281,14 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Symbol next.next(), pointer, value
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, @pattern, "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, @pattern, "", @, @make
+      else
+        result = null
+        
+      return result
 
 
 # OptionalWhite
@@ -248,9 +297,15 @@ module.exports =
       
     name: "OptionalWhite"
       
-    parse: (next, source, parseStack, table) =>
-      match = source.match "\\s*"
-      return new program.OptionalWhite next.next(), @
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        match = source.match @pattern
+        result = new program.OptionalWhite next.next(), @
+      else
+        result = null
+        
+      return result
 
 # RequiredWhite
  
@@ -261,6 +316,12 @@ module.exports =
     make: (next, pointer, value) ->
       new program.RequiredWhite next.next(), pointer
       
-    parse: (next, source, parseStack, table) =>
-      return doMatch next, source, "\\s*", "", @, @make
+    parseFn: (next, source, parseStack, table) =>
+      if source.current.index != @reached
+        @reached = source.current.index
+        result = doMatch next, source, @pattern, "", @, @make
+      else
+        result = null
+        
+      return result
 

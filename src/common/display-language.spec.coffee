@@ -76,13 +76,13 @@ describe "language display", ->
     next = new linkable.Next(1)
     item = new language.OptionalWhite next.next(), "s"
     display = item.displayGraph [], ""
-    display.should.equal "1=OptionalWhite:s:\n"
+    display.should.equal "1=OptionalWhite:\\s*:s:\n"
 
   it "RequiredWhite", ->
     next = new linkable.Next(1)
     item = new language.RequiredWhite next.next(), "+"
     display = item.displayGraph [], ""
-    display.should.equal "1=RequiredWhite:+:\n"
+    display.should.equal "1=RequiredWhite:\\s*:+:\n"
 
   describe "Repeat", ->
     it "null", ->
@@ -132,4 +132,29 @@ describe "language display", ->
     display = item.displayGraph [], ""
     display.should.equal "1=OrJoin\n  left is null\n  right is null\n"
 
+  describe "Production", ->
+    it "all filled", ->
+      next = new linkable.Next(1)
+      a = new language.Symbol next.next()
+      e = new language.Constant next.next(), "foo"
+      p = new language.Constant next.next(), "^"
+      g = new language.Constant next.next(), "=>"
+      item = new language.Production next.next(), a, e, p, g
+      a.addUp item
+      e.addUp item
+      p.addUp item
+      g.addUp item
+      display = item.displayGraph [], ""
+      text = "5=Production\n  1=Symbol:([A-Z]|[a-z]|_)([A-Z]|[a-z]|[0-9]|_)*:\n"
+      text+= "  2=Constant foo\n  3=Constant ^\n  4=Constant =>\n"
+      display.should.equal text
+      
+    it "All null", ->
+      next = new linkable.Next(1)
+      item = new language.Production next.next(), null, null, null, null
+      display = item.displayGraph [], ""
+      text = "1=Production\n  assign is null\n  expression is null\n"
+      text+= "  parseTime is null\n  generate is null\n"
+      display.should.equal text
+      
 

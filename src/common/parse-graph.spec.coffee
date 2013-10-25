@@ -12,7 +12,9 @@ linkable = require "../bin/linkable"
 scaffold = require "./test.scaffold"
 upDown = require "./up-down.scaffold"
 
-upDown.connect linkable, language, program
+upDown.connectLinkable linkable
+upDown.connectLanguage language
+upDown.connectProgram program
 
 unique = scaffold.unique
 
@@ -123,7 +125,7 @@ text += "abcdef\nfoo\"a string\"'another string'"
 
 source = new Source text
 
-original = root.parse dynext, source, parseStack, table
+original = root.parse dynext, source
 
 flat = new linkable.Flat()
 root.flatten flat
@@ -132,7 +134,7 @@ list = flat.list
 other = language.expand list
 
 source = new Source text
-copy = other.parse otherNext, source, parseStack, table
+copy = other.parse otherNext, source
 
 describe "language graph", ->
   it "original ids should be unique (throws if not)", ->
