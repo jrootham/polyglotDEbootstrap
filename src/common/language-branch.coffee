@@ -147,14 +147,14 @@ module.exports =
 
     name: "Repeat"
     
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = new program.Repeat next.next(), @
         
         save source, parseStack
         
-        while item = @argument.parseFn next, source, parseStack, table
+        while item = @argument.parseFn next, source, parseStack, scope
           result.add item
           item.up = result
           
@@ -174,13 +174,13 @@ module.exports =
   
     name: "AndJoin"
 
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         save source, parseStack
 
-        leftParse = @left.parseFn next, source, parseStack, table
-        rightParse = @right.parseFn next, source, parseStack, table
+        leftParse = @left.parseFn next, source, parseStack, scope
+        rightParse = @right.parseFn next, source, parseStack, scope
         
         if leftParse && rightParse
           result = new program.AndJoin next.next(), @, leftParse,rightParse
@@ -207,19 +207,19 @@ module.exports =
     
     name: "OrJoin"
 
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         save source, parseStack
               
-        descendent = @left.parseFn next, source, parseStack, table
+        descendent = @left.parseFn next, source, parseStack, scope
         
         if ! descendent
           restore source, parseStack
           save source, parseStack
           @right.preorder -> @reached = -1
 
-          descendent = @right.parseFn next, source, parseStack, table
+          descendent = @right.parseFn next, source, parseStack, scope
             
         if descendent
           commit source, parseStack

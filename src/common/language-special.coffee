@@ -93,23 +93,20 @@ module.exports =
       
       return "\n" + result
 
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
-        assignProgram = @assign.parse next, source, parseStack, table
+        assignProgram = @assign.parseFn next, source, parseStack, scope
         
         result = null
         
         if assignProgram
           if source.next ":="
             expressionProgram = @expression.parseFn next, source, parseStack
-            , table
             
             if expressionProgram
               postParseProgram =  @parseTime.parseFn next, source, parseStack
-              , table
               generateProgram = @generate.parseFn next, source, parseStack
-              , table
               source.next ";"
               
               result = new program.Production next.next(), assignProgram

@@ -1,4 +1,4 @@
-# tests for SymbolTable
+# tests for Scope
 
 should = require("chai").should()
 
@@ -6,47 +6,69 @@ Source = require "../bin/source"
 linkable = require "../bin/linkable"
 language = require "../bin/language"
 program = require "../bin/program"
-SymbolTable = require "../bin/symbol-table"
 upDown = require "./up-down.scaffold"
 
 upDown.connectLinkable linkable
 upDown.connectLanguage language
 upDown.connectProgram program
 
-describe "Testing symbol table object", ->
+next = new linkable.Next 1
+
+describe "Testing Scope object", ->
   it "new table should be empty", ->
-    table = new SymbolTable()
+    table = new program.Scope next.next(), null
     Object.keys(table.table).length.should.equal 0
     
   it "new table should not contain a symbol", ->
-    table = new SymbolTable()
+    table = new program.Scope next.next(), null
     table.isInserted("foo").should.equal false
     
   it "inserted symbol should be inserted", ->
-    table = new SymbolTable()
+    table = new program.Scope next.next(), null
     table.insert "foo"
     table.isInserted("foo").should.equal true
     
   it "inserted symbol should not be set", ->
-    table = new SymbolTable()
+    table = new program.Scope next.next(), null
     table.insert "foo"
     table.isSet("foo").should.be.false
     
   it "set symbol should be set", ->
-    table = new SymbolTable()
+    table = new program.Scope next.next(), null
     table.set "foo", 1
     table.isSet("foo").should.be.true
     
-  it "set symbol should be set", ->
-    table = new SymbolTable()
+  it "set symbol should have a value", ->
+    table = new program.Scope next.next(), null
     table.set "foo", 1
-    table.get("foo").should.equal 1
+    table.get("foo").item.value.should.equal 1
 
-describe "simple symbol table set", ->
-  source = new Source "name := foo"
+  it "unset symbol should not be set", ->
+    table = new program.Scope next.next(), null
+    table.set "foo", 1
+    table.get("foo").item.value.should.equal 1
+    table.unset "foo"
+    table.isInserted("foo").should.be.true
+    table.isSet("foo").should.be.false
+  
+  it "removed symbol should not be inserted", ->
+    table = new program.Scope next.next(), null
+    table.insert "foo"
+    table.isInserted("foo").should.be.true
+    table.remove table, "foo"
+    table.isInserted("foo").should.be.false
+    
+  it "symbol set in outer scope should have a value from inner scope", ->
+    outer = new program.Scope next.next(), null
+    inner = new program.Scope next.next(), outer
+    outer.set "foo", 1
+    inner.get("foo").item.value.should.equal 1
+    inner.get("foo").scope.should.equal outer
+
+describe "simple scope set", ->
+  source = new Source "name := foo =>"
   languageNext = new linkable.Next(1)
   programNext = new linkable.Next(1)
-  table = new SymbolTable()
   
   symbol = new language.Symbol languageNext.next()
   white = new language.OptionalWhite languageNext.next(), "s"
@@ -74,7 +96,13 @@ describe "simple symbol table set", ->
   gen.addUp assign
   
   assign.preorder (item) -> item.reached = -1
-  root = assign.parseFn programNext, source, [], table
+  
+  scope =
+    current: new program.Scope programNext.next(), null
+  
+  debugger
+  
+  root = assign.parseFn programNext, source, [], scope
   
   describe "check up links", ->
     it "for language", ->

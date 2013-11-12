@@ -39,21 +39,12 @@ module.exports =
       
       return result
       
-    displayGraph: (visited, indent) ->
-      result = @displayNode indent
-      
-      if ! visited[@linkid]
-        visited[@linkid] = true
-        result += "\n"
-
-        for item in @list
-          if item
-            result += item.displayGraph visited, indent + "  "
-          else
-            result += indent + "  " + "item is null\n"
-      else
-        result += "...\n"
-      
+    tailDisplay: (visited, indent) =>
+      for item in @list
+        if item
+          result += item.displayGraph visited, indent + "  "
+        else
+          result += indent + "  " + "item is null\n"
       return result
 
     preorderFn: (visited, fn) ->
@@ -87,25 +78,16 @@ module.exports =
     isComplete: ->
       return @left.isComplete() && @right.isComplete()
 
-    displayGraph: (visited, indent) ->
-      result = @displayNode indent
-      
-      if ! visited[@linkid]
-        visited[@linkid] = true
-        result += "\n"
-
-        if @left
-          result += @left.displayGraph visited, indent + "  "
-        else
-          result += indent + "  " + "left is null\n"
-
-        if @right
-          result += @right.displayGraph visited, indent + "  "
-        else
-          result += indent + "  " + "right is null\n"
+    tailDisplay: (visited, indent) =>
+      if @left
+        result += @left.displayGraph visited, indent + "  "
       else
-        result += "...\n"
-      
+        result += indent + "  " + "left is null\n"
+
+      if @right
+        result += @right.displayGraph visited, indent + "  "
+      else
+        result += indent + "  " + "right is null\n"
       return result
 
     preorderFn: (visited, fn) ->
@@ -137,20 +119,11 @@ module.exports =
 
     name: "OrJoin"
 
-    displayGraph: (visited, indent) ->
-      result = @displayNode indent
-      
-      if ! visited[@linkid]
-        visited[@linkid] = true
-        result += "\n"
-
-        if @argument
-          result += @argument.displayGraph visited, indent + "  "
-        else
-          result += indent + "  " + "argument is null\n"
+    tailDisplay: (visited, indent) =>
+      if @argument
+        result += @argument.displayGraph visited, indent + "  "
       else
-        result += "...\n"
-      
+        result += indent + "  " + "argument is null\n"
       return result
 
     isComplete: ->

@@ -65,7 +65,7 @@ module.exports =
 
     name: "Constant"
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         match = source.next(@value)
@@ -77,10 +77,10 @@ module.exports =
         result = null
       return result
 
-    tailDisplay: ->
+    tailDisplay: (visited, indent) =>
       " " + @value + "\n"
 
-    makeFlatItem: ->
+    makeFlatItem: =>
       result = super
       result.value = @value
       
@@ -107,7 +107,7 @@ module.exports =
     make:  (next, pointer, value) ->
       new program.Match next.next(), pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, @pattern, @flags, @, @make
@@ -125,7 +125,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Unsigned next.next(),pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, "[0-9]*", "", @, @make
@@ -143,7 +143,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Integer next.next(), pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, "\-?[0-9]*", "", @, @make
@@ -161,7 +161,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Fixed next.next(), pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
@@ -178,7 +178,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.Float next.next(), pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         pattern = "-?[0-9]*(\\.[0-9]*)?((e|E)-?[0-9]*)?"
@@ -198,7 +198,7 @@ module.exports =
     make: (next, pointer, value) ->
       new program.FixedBCD next.next(), pointer, value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
@@ -214,7 +214,7 @@ module.exports =
       
     name: "StringType"
     
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = new program.StringType next.next(), @, source.toEOL()
@@ -229,7 +229,7 @@ module.exports =
       
     name: "SingleQuotes"
     
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         matched = source.singleQuotes()
@@ -248,7 +248,7 @@ module.exports =
       
     name: "DoubleQuotes"
     
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         matched = source.doubleQuotes()
@@ -278,13 +278,14 @@ module.exports =
       result.pattern = @pattern
       return result
 
-    make: (next, pointer, value) ->
-      new program.Symbol next.next(), pointer, value
+    makeMake: (scope) ->
+      return (next, pointer, value) ->
+        new program.Symbol next.next(), pointer, scope.insert value
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
-        result = doMatch next, source, @pattern, "", @, @make
+        result = doMatch next, source, @pattern, "", @, @makeMake scope.current
       else
         result = null
         
@@ -297,7 +298,7 @@ module.exports =
       
     name: "OptionalWhite"
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
         match = source.match @pattern
@@ -313,10 +314,10 @@ module.exports =
       
     name: "RequiredWhite"
     
-    make: (next, pointer, value) ->
+    make: (next, pointer, value, scope) ->
       new program.RequiredWhite next.next(), pointer
       
-    parseFn: (next, source, parseStack, table) =>
+    parseFn: (next, source, parseStack) =>
       if source.current.index != @reached
         @reached = source.current.index
         result = doMatch next, source, @pattern, "", @, @make

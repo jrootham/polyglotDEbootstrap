@@ -11,6 +11,6 @@ module.exports =
       
     parse: (next, source) ->
       @.preorder (item) -> item.reached = -1
-      @parseFn next, source, [], new program.SymbolTable
+      @parseFn next, source, [], {current: null}
       
   

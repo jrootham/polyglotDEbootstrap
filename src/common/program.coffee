@@ -5,7 +5,7 @@
 branch = require "./program-branch"
 leaf = require "./program-leaf"
 special = require "./program-special"
-SymbolTable = require "./symbol-table"
+scope = require "./program-scope"
 
 module.exports =
   Repeat: branch.Repeat
@@ -25,6 +25,5 @@ module.exports =
   OptionalWhite: leaf.OptionalWhite
   RequiredWhite: leaf.RequiredWhite
   Production: special.Production
-  
-  SymbolTable: SymbolTable
+  Scope: scope.Scope
 

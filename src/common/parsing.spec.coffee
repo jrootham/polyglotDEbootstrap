@@ -297,13 +297,13 @@ describe "Test parsing classes", ->
   describe "Test symbol", ->
     source = new Source 'foobar_42a _FB22 98'
     parser = new language.Symbol next.next()
-    first = parser.parse dyNext, source
-    second = parser.parse dyNext, source
+    first = parser.parseFn dyNext, source, [], {current:new program.Scope null}
+    second = parser.parseFn dyNext, source, [],{current:new program.Scope null}
     skip = new language.RequiredWhite next.next(), 's'
-    skip1 = skip.parse dyNext, source
-    third = parser.parse dyNext, source
-    skip2 = skip.parse dyNext, source
-    fourth = parser.parse dyNext, source
+    skip1 = skip.parseFn dyNext, source, [], {current:new program.Scope null}
+    third = parser.parseFn dyNext, source, [], {current:new program.Scope null}
+    skip2 = skip.parseFn dyNext, source, [], {current:new program.Scope null}
+    fourth = parser.parseFn dyNext, source, [],{current:new program.Scope null}
         
     it "first should be complete", ->
       first.isComplete().should.be.true

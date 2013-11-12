@@ -22,8 +22,6 @@ next = new linkable.Next 1
 dynext = new linkable.Next 1
 otherNext = new linkable.Next 1
 
-table = new program.SymbolTable
-
 parseStack = []
 
 u = new language.Unsigned next.next()
@@ -125,7 +123,7 @@ text += "abcdef\nfoo\"a string\"'another string'"
 
 source = new Source text
 
-original = root.parse dynext, source
+original = root.parseFn dynext, source, [], {current:new program.Scope null}
 
 flat = new linkable.Flat()
 root.flatten flat
@@ -134,7 +132,8 @@ list = flat.list
 other = language.expand list
 
 source = new Source text
-copy = other.parse otherNext, source
+copy = other.parseFn otherNext, source, [], {current:new program.Scope null}
+
 
 describe "language graph", ->
   it "original ids should be unique (throws if not)", ->
@@ -236,8 +235,8 @@ test = (name, parsed) ->
         name = parsed.list[3].argument.argument.argument.left.left.name
         name.should.equal "Symbol"
         
-      it "leftmost value thing_1", ->
-        value = parsed.list[3].argument.argument.argument.left.left.value
+      it "leftmost symbol name thing_1", ->
+        value = parsed.list[3].argument.argument.argument.left.left.symbolName()
         value.should.equal "thing_1"
         
       it "middle should be Match", ->

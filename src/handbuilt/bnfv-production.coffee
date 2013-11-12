@@ -54,10 +54,16 @@ postParse = (next) ->
   a2 = makeAnd next, w, r
   return makeAnd next, a1,a2
 
-# placeholder
+# <newScope>
 
 postParseStatement = (next) ->
-  return new language.Constant "foo"
+  return newScope next
+  
+newScope = (next) ->
+  s = new language.newScope next.next()
+  w = new language.OptionalWhite next.next(), ""
+  return makeAnd next, s, w
+  
   
 #generate := {sw} "=>" {} *<generateStatement>;
 

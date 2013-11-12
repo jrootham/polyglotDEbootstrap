@@ -8,34 +8,15 @@ class Leaf extends Program
   constructor: (linkid, pointer) ->
     super linkid, pointer
 
-  displayGraph: (visited, indent) ->
-    result = @displayNode indent
-    
-    if ! visited[@linkid]
-      visited[@linkid] = true
-      result += "\n"
-    else
-      result += "...\n"
-    
-    return result
- 
   isComplete: ->
     return true
     
 class Value extends Leaf
   constructor: (linkid, pointer, @value) ->
     super linkid, pointer
-
-  displayGraph: (visited, indent) ->
-    result = @displayNode indent
-    
-    if ! visited[@linkid]
-      visited[@linkid] = true
-      result += ":" + @value + "\n"
-    else
-      result += "...\n"
-    
-    return result
+  
+  tailDisplay: (visited, indent) =>
+    return ":" + @value + "\n"
     
 class Numeric extends Value
   constructor: (linkid, pointer, value) ->
@@ -43,32 +24,16 @@ class Numeric extends Value
 
 class White extends Leaf
 
-  displayGraph: (visited, indent) ->
-    result = @displayNode indent
-    
-    if ! visited[@linkid]
-      visited[@linkid] = true
-      result += ":" + @pointer.whitespace + "\n"
-    else
-      result += "...\n"
-    
-    return result
+  tailDisplay: (visited, indent) =>
+    return ":" + @pointer.whitespace + "\n"
     
 module.exports =
   Constant: class extends Leaf
 
     name: "Constant"
   
-    displayGraph: (visited, indent) ->
-      result = @displayNode indent
-      
-      if ! visited[@linkid]
-        visited[@linkid] = true
-        result += ":" + @pointer.value + "\n"
-      else
-        result += "...\n"
-      
-      return result
+    tailDisplay: (visited, indent) =>
+      return ":" + @pointer.value + "\n"
       
   Unsigned: class extends Numeric
 
@@ -106,6 +71,12 @@ module.exports =
 
     name: "Symbol"
     
+    tailDisplay: (visited, indent) =>
+      return @value.item.name
+    
+    symbolName: =>
+      return @value.item.name
+
   Match: class extends Value
 
     name: "Match"
