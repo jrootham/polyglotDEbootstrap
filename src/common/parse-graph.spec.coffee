@@ -123,7 +123,8 @@ text += "abcdef\nfoo\"a string\"'another string'"
 
 source = new Source text
 
-original = root.parseFn dynext, source, [], {current:new program.Scope null}
+original = root.parseFn dynext, source, [],
+{current:new program.Scope dynext.next(), null}
 
 flat = new linkable.Flat()
 root.flatten flat
@@ -132,7 +133,8 @@ list = flat.list
 other = language.expand list
 
 source = new Source text
-copy = other.parseFn otherNext, source, [], {current:new program.Scope null}
+copy = other.parseFn otherNext, source, [],
+{current:new program.Scope dynext.next(), null}
 
 
 describe "language graph", ->

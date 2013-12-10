@@ -34,6 +34,7 @@ describe "Testing Scope object", ->
     table.isSet("foo").should.be.false
     
   it "set symbol should be set", ->
+    debugger
     table = new program.Scope next.next(), null
     table.set "foo", 1
     table.isSet("foo").should.be.true

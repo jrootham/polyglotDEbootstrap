@@ -295,15 +295,22 @@ describe "Test parsing classes", ->
       skipped2.isComplete().should.be.true
 
   describe "Test symbol", ->
+    debugger
     source = new Source 'foobar_42a _FB22 98'
     parser = new language.Symbol next.next()
-    first = parser.parseFn dyNext, source, [], {current:new program.Scope null}
-    second = parser.parseFn dyNext, source, [],{current:new program.Scope null}
+    first = parser.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
+    second = parser.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
     skip = new language.RequiredWhite next.next(), 's'
-    skip1 = skip.parseFn dyNext, source, [], {current:new program.Scope null}
-    third = parser.parseFn dyNext, source, [], {current:new program.Scope null}
-    skip2 = skip.parseFn dyNext, source, [], {current:new program.Scope null}
-    fourth = parser.parseFn dyNext, source, [],{current:new program.Scope null}
+    skip1 = skip.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
+    third = parser.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
+    skip2 = skip.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
+    fourth = parser.parseFn dyNext, source, [],
+    {current:new program.Scope dyNext.next(), null}
         
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -312,13 +319,13 @@ describe "Test parsing classes", ->
       first.pointer.should.equal parser
 
     it "matched opening alpha", ->
-      first.value.should.equal "foobar_42a"
+      first.symbolName().should.equal "foobar_42a"
 
     it "blank mismatch", ->
       should.equal second, null
 
     it "matched opening _", ->
-      third.value.should.equal "_FB22"
+      third.symbolName().should.equal "_FB22"
 
     it "leading digit mismatch", ->
       should.equal fourth, null

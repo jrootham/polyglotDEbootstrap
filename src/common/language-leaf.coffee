@@ -285,6 +285,7 @@ module.exports =
     parseFn: (next, source, parseStack, scope) =>
       if source.current.index != @reached
         @reached = source.current.index
+        debugger
         result = doMatch next, source, @pattern, "", @, @makeMake scope.current
       else
         result = null

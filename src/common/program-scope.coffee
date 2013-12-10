@@ -39,7 +39,8 @@ module.exports =
         item: item
       
     set: (name, value, definition) =>
-      item = @insert name
+      temp = @insert name
+      item = temp.item
       item.set = true
       item.value = value
       item.definition = definition
