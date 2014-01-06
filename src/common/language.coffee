@@ -7,6 +7,7 @@ branch = require "./language-branch"
 leaf = require "./language-leaf"
 expand = require "./language-expand"
 special = require "./language-special"
+postParse = require "./language-postParse"
 
 module.exports =
   Repeat: branch.Repeat
@@ -28,4 +29,6 @@ module.exports =
   Production: special.Production
 
   expand: expand.expand
+  
+  NewScope: postParse.NewScope
   

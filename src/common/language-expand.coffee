@@ -90,6 +90,10 @@ factory =
     return make id, expanded, ->
       return new leaf.RequiredWhite id, link[id].whitespace
 
+  NewScope: (id, link, expanded) ->
+    return make id, expanded, ->
+      return new postParse.NewScope id
+      
 module.exports =
   expand: (list) ->
     link = []

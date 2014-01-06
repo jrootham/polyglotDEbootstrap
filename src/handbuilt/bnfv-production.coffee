@@ -57,7 +57,7 @@ postParse = (next) ->
 # <newScope>
 
 postParseStatement = (next) ->
-  return newScope next
+  return new language.NewScope next
   
 newScope = (next) ->
   s = new language.newScope next.next()
